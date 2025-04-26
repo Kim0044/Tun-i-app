@@ -1,0 +1,101 @@
+{
+  "migIndex": 1,
+  "data": [
+    {
+      "path": "assets/fonts/BauhausStd-Bold.eot",
+      "sha1": "37824545923f8697e4068ad8c0bf8c1362bb82c8"
+    },
+    {
+      "path": "assets/fonts/BauhausStd-Bold.ttf",
+      "sha1": "f911b63c9d8adb017897a4af2108f8291497702c"
+    },
+    {
+      "path": "assets/fonts/BauhausStd-Bold.woff",
+      "sha1": "76683545014e464c0411e38ed9afe3bce46c18c4"
+    },
+    {
+      "path": "assets/fonts/BauhausStd-Bold.woff2",
+      "sha1": "ea6ffc2ac4990626315bade0ad0bc46e7dfd64b1"
+    },
+    {
+      "path": "assets/fonts/BauhausStd-Demi.eot",
+      "sha1": "ca10217ee30e639b4bf67bb61abc56cc32d4be54"
+    },
+    {
+      "path": "assets/fonts/BauhausStd-Demi.ttf",
+      "sha1": "353fbb3fca964d703857d105c3d236cb213d8cda"
+    },
+    {
+      "path": "assets/fonts/BauhausStd-Demi.woff",
+      "sha1": "1d8768524e674b4b96a9128bd3701130d8b82a7f"
+    },
+    {
+      "path": "assets/fonts/BauhausStd-Demi.woff2",
+      "sha1": "e13f6baa54de8026fa72d5695c2511a5f3936c0d"
+    },
+    {
+      "path": "assets/fonts/BauhausStd-Heavy.eot",
+      "sha1": "29c4e24acbe55098f4233440db847b3105b9bf28"
+    },
+    {
+      "path": "assets/fonts/BauhausStd-Heavy.ttf",
+      "sha1": "8c53633376c2b90fefb7688bb074fc505cd1bd6f"
+    },
+    {
+      "path": "assets/fonts/BauhausStd-Heavy.woff",
+      "sha1": "04af19b062e6e9e8c615623e0ab83c13aae7749a"
+    },
+    {
+      "path": "assets/fonts/BauhausStd-Heavy.woff2",
+      "sha1": "fea48ff1328ecda62754276d3d19c59945a17af6"
+    },
+    {
+      "path": "assets/fonts/BauhausStd-Light.eot",
+      "sha1": "a92f47fd92a0106224cd73df1953d5725668d205"
+    },
+    {
+      "path": "assets/fonts/BauhausStd-Light.ttf",
+      "sha1": "1241a50b5b79a5af42e60f453f4f98734bcef350"
+    },
+    {
+      "path": "assets/fonts/BauhausStd-Light.woff",
+      "sha1": "4165390356ec2971cf2dac778c0e64ea3f6678d6"
+    },
+    {
+      "path": "assets/fonts/BauhausStd-Light.woff2",
+      "sha1": "321bcd590d7c2384816818c50229824e745ec122"
+    },
+    {
+      "path": "assets/fonts/BauhausStd-Medium.eot",
+      "sha1": "5c971c499fd8f428f751b40edce163de88889eb2"
+    },
+    {
+      "path": "assets/fonts/BauhausStd-Medium.ttf",
+      "sha1": "a1eec9724cafb2c5d461269e918dfce5bc613943"
+    },
+    {
+      "path": "assets/fonts/BauhausStd-Medium.woff",
+      "sha1": "e7f1edbb8d1a73ffecb766eb8e50c24f5da7a912"
+    },
+    {
+      "path": "assets/fonts/BauhausStd-Medium.woff2",
+      "sha1": "96c2dce860fe064aa98546ad6c0ea2687765e8dc"
+    },
+    {
+      "path": "assets/fonts/demo.html",
+      "sha1": "d8a54cb65ed181e02f8a6595390795d2c1c5ded1"
+    },
+    {
+      "path": "assets/fonts/ITC Bauhaus Medium/ITC Bauhaus Medium.otf",
+      "sha1": "23fbcf9e3a36fee2ba1b08a3c7eab07ea5fa0851"
+    },
+    {
+      "path": "assets/fonts/ITC Bauhaus Medium/readme.html",
+      "sha1": "097851ad51353a731f2f984535b1db70dfccd01c"
+    },
+    {
+      "path": "assets/fonts/stylesheet.css",
+      "sha1": "eb96b35c2d5a4c9286ffb6924b9057fa40456c0c"
+    }
+  ]
+}

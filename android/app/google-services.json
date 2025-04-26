@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "789775058686",
+    "project_id": "tuniapp-9dc97",
+    "storage_bucket": "tuniapp-9dc97.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:789775058686:android:ecaee592dd4670168cc7af",
+        "android_client_info": {
+          "package_name": "com.tuni"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBwMxJ2BlC9KqsP_zXTmxra5Ds_7_UoZ78"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
