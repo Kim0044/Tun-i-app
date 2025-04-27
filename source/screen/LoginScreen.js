@@ -1,11 +1,20 @@
-import React, { useState } from "react";
-import { StyleSheet, Text, View, Image, TextInput, TouchableOpacity, Modal, Pressable } from "react-native";
+import React, {useState} from 'react';
+import {
+  StyleSheet,
+  Text,
+  View,
+  Image,
+  TextInput,
+  TouchableOpacity,
+  Modal,
+  Pressable,
+} from 'react-native';
 import auth from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
 
-const LoginScreen = ({ navigation }) => {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
+const LoginScreen = ({navigation}) => {
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [usernameError, setUsernameError] = useState(false);
   const [passwordError, setPasswordError] = useState(false);
   const [incorrectCredentials, setIncorrectCredentials] = useState(false);
@@ -14,17 +23,16 @@ const LoginScreen = ({ navigation }) => {
   const handleLogin = async () => {
     if (username && password) {
       try {
-        // Query Firestore to check if the provided username exists
-        const usernameQuerySnapshot = await firestore().collection('users')
+        const usernameQuerySnapshot = await firestore()
+          .collection('users')
           .where('username', '==', username)
           .get();
-  
-        // Query Firestore to check if the provided email exists
-        const emailQuerySnapshot = await firestore().collection('users')
-          .where('email', '==', username) // Assuming username can also be an email
+
+        const emailQuerySnapshot = await firestore()
+          .collection('users')
+          .where('email', '==', username)
           .get();
-  
-        // Check if either username or email matches
+
         if (!usernameQuerySnapshot.empty || !emailQuerySnapshot.empty) {
           let userData;
           if (!usernameQuerySnapshot.empty) {
@@ -32,17 +40,19 @@ const LoginScreen = ({ navigation }) => {
           } else {
             userData = emailQuerySnapshot.docs[0].data();
           }
-          // Authenticate the user with the provided password
-          const userCredential = await auth().signInWithEmailAndPassword(userData.email, password);
+
+          const userCredential = await auth().signInWithEmailAndPassword(
+            userData.email,
+            password,
+          );
           const user = userCredential.user;
-          navigation.navigate('HP', { userData });
+          navigation.navigate('HP', {userData});
         } else {
           setUsernameError(true);
           setPasswordError(true);
           setIncorrectCredentials(true);
         }
       } catch (error) {
-      
         setUsernameError(true);
         setPasswordError(true);
         setIncorrectCredentials(true);
@@ -52,33 +62,36 @@ const LoginScreen = ({ navigation }) => {
       setPasswordError(!password);
     }
   };
-  
+
   const ModalComponent = () => (
     <Modal
       animationType="slide"
       transparent={true}
       visible={modalVisible}
-      onRequestClose={() => setModalVisible(false)}
-    >
-      <View style={styles.centeredView} >
+      onRequestClose={() => setModalVisible(false)}>
+      <View style={styles.centeredView}>
         <View style={styles.modalContent}>
-         <Pressable
-            style={[ styles.exitButton]}
-            onPress={() => setModalVisible(false)}
-            >
-          <Text style={{ fontWeight: 'bold', fontSize: 15 }}>✖️</Text>
+          <Pressable
+            style={[styles.exitButton]}
+            onPress={() => setModalVisible(false)}>
+            <Text style={{fontWeight: 'bold', fontSize: 15}}>✖️</Text>
           </Pressable>
-          <Text style={{ color: "#996633", fontSize: 18, textAlign: "center", fontFamily: 'BauhausStd-Demi' }}>
-          Hi there! 😁 Please fill out the login form if you haven't signed in. Click 'Create Account' to register.
+          <Text
+            style={{
+              color: '#996633',
+              fontSize: 18,
+              textAlign: 'center',
+              fontFamily: 'BauhausStd-Demi',
+            }}>
+            Hi there! 😁 Please fill out the login form if you haven't signed
+            in. Click 'Create Account' to register.
           </Text>
         </View>
       </View>
     </Modal>
   );
 
-  
- 
-  const handleUsernameChange = (text) => {
+  const handleUsernameChange = text => {
     setUsername(text);
     if (text && usernameError) {
       setUsernameError(false);
@@ -91,48 +104,43 @@ const LoginScreen = ({ navigation }) => {
     }
   };
 
-  
   const handlePasswordEndEditing = () => {
     if (!password) {
       setPasswordError(false);
     }
   };
-  const handlePasswordChange = (text) => {
+  const handlePasswordChange = text => {
     setPassword(text);
     if (text && passwordError) {
       setPasswordError(false);
     }
   };
-const handleLoginButtonPress = () => {
+  const handleLoginButtonPress = () => {
     if (!username || !password) {
-      
       setModalVisible(true);
     } else {
-      
       handleLogin();
     }
   };
- 
+
   return (
     <View style={styles.container}>
-
       <Image
-        source={require("../../assets/anilogo.png")}
-        style={{ width: 125, height: 240 }}
+        source={require('../../assets/anilogo.png')}
+        style={{width: 125, height: 240}}
       />
       <Image
-        source={require("../../assets/l1.png")}
-        style={{ width: 200, height: 100 }}
+        source={require('../../assets/l1.png')}
+        style={{width: 200, height: 100}}
       />
       <Text
         style={{
           fontSize: 48,
-       
-          color: "#3c444c",
+
+          color: '#3c444c',
           marginTop: 20,
-          fontFamily: 'BauhausStd-Demi'
-         }}
-      >
+          fontFamily: 'BauhausStd-Demi',
+        }}>
         Welcome!
       </Text>
 
@@ -140,20 +148,20 @@ const handleLoginButtonPress = () => {
         style={[
           styles.input,
           usernameError && styles.inputError,
-          
-          { marginBottom: usernameError ? 5 : 10 },
+
+          {marginBottom: usernameError ? 5 : 10},
         ]}
         placeholder="Username"
         onChangeText={handleUsernameChange}
         onEndEditing={handleUsernameEndEditing}
       />
       {usernameError && <Text style={styles.errorText}>Wrong Credentials</Text>}
-     
+
       <TextInput
         style={[
           styles.input,
           passwordError && styles.inputError,
-          { marginBottom: passwordError ? 5 : 10 },
+          {marginBottom: passwordError ? 5 : 10},
         ]}
         placeholder="Password"
         secureTextEntry
@@ -161,25 +169,38 @@ const handleLoginButtonPress = () => {
         onEndEditing={handlePasswordEndEditing}
       />
       {passwordError && <Text style={styles.errorText}>Invalid password</Text>}
-    
+
       <TouchableOpacity
         style={[
           styles.loginButton,
-          (username && password) && styles.loginButtonActive,
+          username && password && styles.loginButtonActive,
         ]}
-        onPress={handleLoginButtonPress}
-      >
-        <Text style={{ color: "#996633", fontSize: 16, fontFamily: 'BauhausStd-Demi' }}>Login</Text>
+        onPress={handleLoginButtonPress}>
+        <Text
+          style={{
+            color: '#996633',
+            fontSize: 16,
+            fontFamily: 'BauhausStd-Demi',
+          }}>
+          Login
+        </Text>
       </TouchableOpacity>
-      
-      <Text style={{ color: "#3c444c", fontSize: 16, marginLeft: 6 }}>--------------------</Text>
+
+      <Text style={{color: '#3c444c', fontSize: 16, marginLeft: 6}}>
+        --------------------
+      </Text>
       <View style={styles.orContainer}>
-       
         <TouchableOpacity
           style={styles.signUpButton}
-          onPress={() => navigation.navigate("Signup")}
-        >
-          <Text style={{ color: "#996633", fontSize: 16,  fontFamily: 'BauhausStd-Demi' }}>Create Account</Text>
+          onPress={() => navigation.navigate('Signup')}>
+          <Text
+            style={{
+              color: '#996633',
+              fontSize: 16,
+              fontFamily: 'BauhausStd-Demi',
+            }}>
+            Create Account
+          </Text>
         </TouchableOpacity>
       </View>
 
@@ -191,22 +212,21 @@ const handleLoginButtonPress = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFF7D5",
-    justifyContent: "center",
-    alignItems: "center",
+    backgroundColor: '#FFF7D5',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   centeredView: {
     flex: 1,
-    justifyContent: 'flex-end', 
+    justifyContent: 'flex-end',
     alignItems: 'center',
     marginTop: 26,
- 
   },
   modalContent: {
     backgroundColor: 'white',
     borderRadius: 20,
-    padding: 40, 
-    width: '90%', 
+    padding: 40,
+    width: '90%',
     alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: {
@@ -218,7 +238,7 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   loginButtonActive: {
-    borderColor: "#996633",
+    borderColor: '#996633',
     borderWidth: 2,
   },
   exitButton: {
@@ -228,15 +248,15 @@ const styles = StyleSheet.create({
   },
   input: {
     height: 40,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: '#FFFFFF',
     borderRadius: 8,
     margin: 10,
     paddingLeft: 10,
-    width: "80%",
-    fontFamily: 'BauhausStd-Demi'
+    width: '80%',
+    fontFamily: 'BauhausStd-Demi',
   },
   inputError: {
-    borderColor: "red",
+    borderColor: 'red',
     borderWidth: 2,
   },
   loginButton: {
@@ -247,8 +267,8 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   orContainer: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     marginTop: 9,
   },
   signUpButton: {
@@ -257,7 +277,7 @@ const styles = StyleSheet.create({
     marginLeft: 6,
   },
   errorText: {
-    color: "red",
+    color: 'red',
     marginTop: 5,
   },
 });

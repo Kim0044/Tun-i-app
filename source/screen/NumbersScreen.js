@@ -1,10 +1,17 @@
-import React, { useRef, useState, useEffect } from 'react';
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Modal, } from 'react-native';
+import React, {useRef, useState, useEffect} from 'react';
+import {
+  StyleSheet,
+  Text,
+  View,
+  ScrollView,
+  TouchableOpacity,
+  Modal,
+} from 'react-native';
 import Header from '../components/Header';
-import firestore from '@react-native-firebase/firestore'; 
+import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
 
-const  NumbersScreen = ({ navigation, route }) => {
+const NumbersScreen = ({navigation, route}) => {
   const scrollViewRef = useRef();
   const [userLevelColor, setUserLevelColor] = useState({});
   const [dataAvailable, setDataAvailable] = useState({});
@@ -16,18 +23,24 @@ const  NumbersScreen = ({ navigation, route }) => {
       const newDataAvailable = {};
       for (let i = 12; i <= 23; i++) {
         const userEmailWithLevel = `${userEmail}level${i}`;
-        const doc = await firestore().collection('scores').doc(userEmailWithLevel).get();
-        newDataAvailable[i] = doc.exists; // Store whether data exists for this level
-        setUserLevelColor(prevColors => ({ ...prevColors, [i]: doc.exists ? '#7ED957' : '#B17D52' }));
+        const doc = await firestore()
+          .collection('scores')
+          .doc(userEmailWithLevel)
+          .get();
+        newDataAvailable[i] = doc.exists;
+        setUserLevelColor(prevColors => ({
+          ...prevColors,
+          [i]: doc.exists ? '#7ED957' : '#B17D52',
+        }));
       }
-      setDataAvailable(newDataAvailable); // Update the state
+      setDataAvailable(newDataAvailable);
     };
 
     fetchUserScores();
   }, []);
 
-  const handleButtonPress = (level) => {
-    switch(level) {
+  const handleButtonPress = level => {
+    switch (level) {
       case 12:
         navigation.navigate('N1to10');
         break;
@@ -49,19 +62,19 @@ const  NumbersScreen = ({ navigation, route }) => {
       case 18:
         navigation.navigate('N1000');
         break;
-        case 19:
-          navigation.navigate('DSTB');
-          break;
-          case 20:
-            navigation.navigate('DBB');
-            break;
-            case 21:
-              navigation.navigate('DR');
-              break;
-              case 22:
-                navigation.navigate('DWRS');
-                break;
-                
+      case 19:
+        navigation.navigate('DSTB');
+        break;
+      case 20:
+        navigation.navigate('DBB');
+        break;
+      case 21:
+        navigation.navigate('DR');
+        break;
+      case 22:
+        navigation.navigate('DWRS');
+        break;
+
       default:
         break;
     }
@@ -72,64 +85,77 @@ const  NumbersScreen = ({ navigation, route }) => {
       <Header />
       <View style={styles.contentContainer}>
         <View style={styles.column}>
-          {[12, 13, 14, 15, 16, 17,].map(level => (
+          {[12, 13, 14, 15, 16, 17].map(level => (
             <TouchableOpacity
               key={level}
               style={[
                 styles.button2,
-                { backgroundColor: userLevelColor[level] },
-                level !== 12 && !dataAvailable[level] && { backgroundColor: '#CCCCCC' },
-                !dataAvailable[level] && dataAvailable[level - 12] && { backgroundColor: '#B17D52' },
+                {backgroundColor: userLevelColor[level]},
+                level !== 12 &&
+                  !dataAvailable[level] && {backgroundColor: '#CCCCCC'},
+                !dataAvailable[level] &&
+                  dataAvailable[level - 12] && {backgroundColor: '#B17D52'},
               ]}
               onPress={() => handleButtonPress(level)}
-              disabled={!dataAvailable[level] && !dataAvailable[level - 12] && level !== 12}
-            >
-              <Text style={[styles.buttonText, { fontFamily: 'BauhausStd-Demi' }]}>
-
-                  {level === 12 ? 'Thank you' : level === 13 ? 'Your welcome' : level === 14 ? 'Im sorry' : level === 15 ? 'I like you' : level === 16 ? 'Pleased to meet you' : level === 17 ? 'Kamusta man ka?' : '' }
+              disabled={
+                !dataAvailable[level] &&
+                !dataAvailable[level - 12] &&
+                level !== 12
+              }>
+              <Text
+                style={[styles.buttonText, {fontFamily: 'BauhausStd-Demi'}]}>
+                {level === 12
+                  ? 'Thank you'
+                  : level === 13
+                  ? 'Your welcome'
+                  : level === 14
+                  ? 'Im sorry'
+                  : level === 15
+                  ? 'I like you'
+                  : level === 16
+                  ? 'Pleased to meet you'
+                  : level === 17
+                  ? 'Kamusta man ka?'
+                  : ''}
               </Text>
-              </TouchableOpacity>
+            </TouchableOpacity>
           ))}
-          {dataAvailable[17] && ( // Conditional rendering based on level 6
-            <TouchableOpacity 
+          {dataAvailable[17] && (
+            <TouchableOpacity
               style={styles.button2}
-              onPress={() => setModalVisible(true)}
-            >
+              onPress={() => setModalVisible(true)}>
               <Text style={styles.buttonText}>Games</Text>
             </TouchableOpacity>
           )}
         </View>
       </View>
       <Modal
-  animationType="slide"
-  transparent={true}
-  visible={modalVisible}
-  onRequestClose={() => {
-    setModalVisible(!modalVisible);
-  }}
->
-  <View style={styles.centeredView}>
-    <View style={styles.modalView}>
-      <Text style={styles.modalText}>Expression Games</Text>
-      <View style={styles.gridContainer}>
-        {[18, 19, 20, 21, 22,].slice(0, 5).map((level, index) => (
-          <View key={level} style={styles.gridItem}>
-            <TouchableOpacity
-              style={[styles.button2, { marginBottom: 10 }]}  // Added marginBottom for spacing between rows
-              onPress={() => {
-                handleButtonPress(level);
-                setModalVisible(false);
-              }}
-            >
-              <Text style={styles.buttonText}> Level {level} </Text>
-            </TouchableOpacity>
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => {
+          setModalVisible(!modalVisible);
+        }}>
+        <View style={styles.centeredView}>
+          <View style={styles.modalView}>
+            <Text style={styles.modalText}>Expression Games</Text>
+            <View style={styles.gridContainer}>
+              {[18, 19, 20, 21, 22].slice(0, 5).map((level, index) => (
+                <View key={level} style={styles.gridItem}>
+                  <TouchableOpacity
+                    style={[styles.button2, {marginBottom: 10}]}
+                    onPress={() => {
+                      handleButtonPress(level);
+                      setModalVisible(false);
+                    }}>
+                    <Text style={styles.buttonText}> Level {level} </Text>
+                  </TouchableOpacity>
+                </View>
+              ))}
+            </View>
           </View>
-        ))}
-      </View>
-     
-    </View>
-  </View>
-</Modal>
+        </View>
+      </Modal>
     </ScrollView>
   );
 };
@@ -172,15 +198,15 @@ const styles = StyleSheet.create({
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 2
+      height: 2,
     },
     shadowOpacity: 0.25,
     shadowRadius: 4,
-    elevation: 5
+    elevation: 5,
   },
   modalText: {
     marginBottom: 15,
-    textAlign: "center",
+    textAlign: 'center',
     fontFamily: 'BauhausStd-Demi',
     fontSize: 27,
   },
@@ -191,8 +217,8 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   gridItem: {
-    width: '48%', // Nearly half width to accommodate two items per row
-    marginBottom: 10, // Space between rows
+    width: '48%',
+    marginBottom: 10,
   },
   buttonText: {
     color: '#fff',
@@ -203,5 +229,4 @@ const styles = StyleSheet.create({
   },
 });
 
-
-export default  NumbersScreen;
+export default NumbersScreen;

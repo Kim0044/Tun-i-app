@@ -1,46 +1,57 @@
-import React, { useState } from 'react';
-import { StyleSheet, View, TouchableOpacity, Text, Image, ScrollView } from 'react-native';
+import React, {useState} from 'react';
+import {
+  StyleSheet,
+  View,
+  TouchableOpacity,
+  Text,
+  Image,
+  ScrollView,
+} from 'react-native';
 import Header from '../components/Header';
-import firestore from '@react-native-firebase/firestore'; 
-import auth from '@react-native-firebase/auth'; // Import Firebase authentication
+import firestore from '@react-native-firebase/firestore';
+import auth from '@react-native-firebase/auth';
 
-const PABScreen = ({ navigation }) => {
+const PABScreen = ({navigation}) => {
   const [displayText, setDisplayText] = useState('');
   const [showTryAgain, setShowTryAgain] = useState(false);
   const [showCorrect, setShowCorrect] = useState(false);
-  const [level, setLevel] = useState(7); // Initialize level state variable with 1
+  const [level, setLevel] = useState(7);
 
-  const handleButtonClick = (text) => {
+  const handleButtonClick = text => {
     if (text === 'asa ang banyo') {
       setDisplayText('asa ang banyo');
       setShowTryAgain(false);
       setShowCorrect(true);
 
-      // Get the current user's email
       const userEmail = auth().currentUser.email;
-      // Get the current user's UID
+
       const currentUserUID = auth().currentUser.uid;
-      // Add the level to the user's email
+
       const userEmailWithLevel = `${userEmail}level${level}`;
-      
-      // Store score and level in Firestore
-      firestore().collection('scores').doc(userEmailWithLevel).set({ score: 1, level: level })
-      .then(() => {
-        console.log("Score and level data saved successfully!");
-      }).catch((error) => {
-        console.error("Error saving score and level data: ", error);
-      });
 
-      // Update the level data in Firestore
-      firestore().collection('users').doc(currentUserUID).update({ level: level })
-      .then(() => {
-        console.log("Level data updated successfully!");
-      }).catch((error) => {
-        console.error("Error updating level data: ", error);
-      });
+      firestore()
+        .collection('scores')
+        .doc(userEmailWithLevel)
+        .set({score: 1, level: level})
+        .then(() => {
+          console.log('Score and level data saved successfully!');
+        })
+        .catch(error => {
+          console.error('Error saving score and level data: ', error);
+        });
 
+      firestore()
+        .collection('users')
+        .doc(currentUserUID)
+        .update({level: level})
+        .then(() => {
+          console.log('Level data updated successfully!');
+        })
+        .catch(error => {
+          console.error('Error updating level data: ', error);
+        });
     } else {
-      setDisplayText(`${text}`); 
+      setDisplayText(`${text}`);
       setShowTryAgain(true);
       setShowCorrect(false);
     }
@@ -79,15 +90,13 @@ const PABScreen = ({ navigation }) => {
           </View>
           <Text style={styles.greetingText2}>{displayText}</Text>
           <TouchableOpacity style={styles.buttonContainer}>
-            <Text style={styles.greetingText2}>Maayong adlaw! Kabalo ba ka "{displayText}"? where is the bathroom </Text>
+            <Text style={styles.greetingText2}>
+              Maayong adlaw! Kabalo ba ka "{displayText}"? where is the bathroom{' '}
+            </Text>
           </TouchableOpacity>
 
-          {showTryAgain && (
-            <Text style={styles.tryAgainText}>Try Again</Text>
-          )}
-          {showCorrect && (
-            <Text style={styles.correctText}>Correct</Text>
-          )}
+          {showTryAgain && <Text style={styles.tryAgainText}>Try Again</Text>}
+          {showCorrect && <Text style={styles.correctText}>Correct</Text>}
         </View>
       </ScrollView>
     </View>
@@ -124,7 +133,7 @@ const styles = StyleSheet.create({
   recordImage: {
     width: 350,
     height: 220,
-    marginBottom: 50, // Adjust the spacing between images as needed
+    marginBottom: 50,
     marginLeft: -34,
     position: 'relative',
   },
@@ -180,14 +189,14 @@ const styles = StyleSheet.create({
     marginTop: 10,
     fontSize: 16,
     fontWeight: 'bold',
-    color: 'red', // You can adjust the color according to your preference
+    color: 'red',
   },
   correctText: {
     textAlign: 'center',
     marginTop: 10,
     fontSize: 16,
     fontWeight: 'bold',
-    color: 'lightgreen', // Light green color for correct answer
+    color: 'lightgreen',
   },
 });
 

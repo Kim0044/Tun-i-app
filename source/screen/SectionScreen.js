@@ -1,10 +1,18 @@
-import React, { useRef, useState, useEffect } from 'react';
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Modal, Button } from 'react-native';
+import React, {useRef, useState, useEffect} from 'react';
+import {
+  StyleSheet,
+  Text,
+  View,
+  ScrollView,
+  TouchableOpacity,
+  Modal,
+  Button,
+} from 'react-native';
 import Header from '../components/Header';
-import firestore from '@react-native-firebase/firestore'; 
+import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
 
-const SectionScreen = ({ navigation, route }) => {
+const SectionScreen = ({navigation, route}) => {
   const scrollViewRef = useRef();
   const [userLevelColor, setUserLevelColor] = useState({});
   const [dataAvailable, setDataAvailable] = useState({});
@@ -16,52 +24,58 @@ const SectionScreen = ({ navigation, route }) => {
       const newDataAvailable = {};
       for (let i = 1; i <= 11; i++) {
         const userEmailWithLevel = `${userEmail}level${i}`;
-        const doc = await firestore().collection('scores').doc(userEmailWithLevel).get();
-        newDataAvailable[i] = doc.exists; // Store whether data exists for this level
-        setUserLevelColor(prevColors => ({ ...prevColors, [i]: doc.exists ? '#7ED957' : '#B17D52' }));
+        const doc = await firestore()
+          .collection('scores')
+          .doc(userEmailWithLevel)
+          .get();
+        newDataAvailable[i] = doc.exists;
+        setUserLevelColor(prevColors => ({
+          ...prevColors,
+          [i]: doc.exists ? '#7ED957' : '#B17D52',
+        }));
       }
-      setDataAvailable(newDataAvailable); // Update the state
+      setDataAvailable(newDataAvailable);
     };
 
     fetchUserScores();
   }, []);
 
-  const handleButtonPress = (level) => {
-    switch(level) {
-        case 1:
-          navigation.navigate('HIAM');
-          break;
-        case 2:
-          navigation.navigate('MA');
-          break;
-        case 3:
-          navigation.navigate('MH');
-          break;
-        case 4:
-          navigation.navigate('MG');
-          break;
-        case 5:
-          navigation.navigate('KA');
-          break;
-        case 6:
-          navigation.navigate('TA');
-          break;
-        case 7:
-          navigation.navigate('PMA');
-          break;
-          case 8:
-            navigation.navigate('PHY');
-            break;
-            case 9:
-              navigation.navigate('PMU');
-              break;
-              case 10:
-                navigation.navigate('PMG');
-                break;
-                case 11:
-                  navigation.navigate('PTA');
-                  break;
-       
+  const handleButtonPress = level => {
+    switch (level) {
+      case 1:
+        navigation.navigate('HIAM');
+        break;
+      case 2:
+        navigation.navigate('MA');
+        break;
+      case 3:
+        navigation.navigate('MH');
+        break;
+      case 4:
+        navigation.navigate('MG');
+        break;
+      case 5:
+        navigation.navigate('KA');
+        break;
+      case 6:
+        navigation.navigate('TA');
+        break;
+      case 7:
+        navigation.navigate('PMA');
+        break;
+      case 8:
+        navigation.navigate('PHY');
+        break;
+      case 9:
+        navigation.navigate('PMU');
+        break;
+      case 10:
+        navigation.navigate('PMG');
+        break;
+      case 11:
+        navigation.navigate('PTA');
+        break;
+
       default:
         break;
     }
@@ -72,68 +86,77 @@ const SectionScreen = ({ navigation, route }) => {
       <Header />
       <View style={styles.contentContainer}>
         <View style={styles.column}>
-          {[1, 2, 3, 4, 5, 6, ].map(level => (
+          {[1, 2, 3, 4, 5, 6].map(level => (
             <TouchableOpacity
               key={level}
               style={[
                 styles.button2,
-                { backgroundColor: userLevelColor[level] },
-                level !== 1 && !dataAvailable[level] && { backgroundColor: '#CCCCCC' },
-                !dataAvailable[level] && dataAvailable[level - 1] && { backgroundColor: '#B17D52' },
+                {backgroundColor: userLevelColor[level]},
+                level !== 1 &&
+                  !dataAvailable[level] && {backgroundColor: '#CCCCCC'},
+                !dataAvailable[level] &&
+                  dataAvailable[level - 1] && {backgroundColor: '#B17D52'},
               ]}
               onPress={() => handleButtonPress(level)}
-              disabled={!dataAvailable[level] && !dataAvailable[level - 1] && level !== 1}
-            >
-              <Text style={[styles.buttonText, { fontFamily: 'BauhausStd-Demi' }]}>
-    
-                {level === 1 ? 'Hi I am' : level === 2 ? 'Good Morning' : level === 3 ? 'Good Afternoon' : level === 4 ? 'Good Evening' : level === 5 ? 'How are you?' : level === 6 ? 'Kamusta man ka?' : '' }
+              disabled={
+                !dataAvailable[level] &&
+                !dataAvailable[level - 1] &&
+                level !== 1
+              }>
+              <Text
+                style={[styles.buttonText, {fontFamily: 'BauhausStd-Demi'}]}>
+                {level === 1
+                  ? 'Hi I am'
+                  : level === 2
+                  ? 'Good Morning'
+                  : level === 3
+                  ? 'Good Afternoon'
+                  : level === 4
+                  ? 'Good Evening'
+                  : level === 5
+                  ? 'How are you?'
+                  : level === 6
+                  ? 'Kamusta man ka?'
+                  : ''}
               </Text>
-
-              </TouchableOpacity>
+            </TouchableOpacity>
           ))}
-          {dataAvailable[6] && ( // Conditional rendering based on level 6
-            <TouchableOpacity 
+          {dataAvailable[6] && (
+            <TouchableOpacity
               style={styles.button2}
-              onPress={() => setModalVisible(true)}
-            >
+              onPress={() => setModalVisible(true)}>
               <Text style={styles.buttonText}>Games</Text>
             </TouchableOpacity>
           )}
         </View>
       </View>
       <Modal
-  animationType="slide"
-  transparent={true}
-  visible={modalVisible}
-  onRequestClose={() => {
-    setModalVisible(!modalVisible);
-  }}
->
-  <View style={styles.centeredView}>
-    <View style={styles.modalView}>
-      <Text style={styles.modalText}>Basic Greetings Games</Text>
-      <View style={styles.gridContainer}>
-        {[7, 8, 9, 10, 11].slice(0, 6).map((level, index) => (
-          <View key={level} style={styles.gridItem}>
-            <TouchableOpacity
-              style={[styles.button2, { marginBottom: 10 }]}  // Added marginBottom for spacing between rows
-              onPress={() => {
-                handleButtonPress(level);
-                setModalVisible(false);
-              }}
-            >
-              <Text style={styles.buttonText}> Level {level} </Text>
-            </TouchableOpacity>
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => {
+          setModalVisible(!modalVisible);
+        }}>
+        <View style={styles.centeredView}>
+          <View style={styles.modalView}>
+            <Text style={styles.modalText}>Basic Greetings Games</Text>
+            <View style={styles.gridContainer}>
+              {[7, 8, 9, 10, 11].slice(0, 6).map((level, index) => (
+                <View key={level} style={styles.gridItem}>
+                  <TouchableOpacity
+                    style={[styles.button2, {marginBottom: 10}]}
+                    onPress={() => {
+                      handleButtonPress(level);
+                      setModalVisible(false);
+                    }}>
+                    <Text style={styles.buttonText}> Level {level} </Text>
+                  </TouchableOpacity>
+                </View>
+              ))}
+            </View>
           </View>
-        ))}
-      </View>
-     
-    </View>
-  </View>
-</Modal>
-
-
-
+        </View>
+      </Modal>
     </ScrollView>
   );
 };
@@ -177,15 +200,15 @@ const styles = StyleSheet.create({
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 2
+      height: 2,
     },
     shadowOpacity: 0.25,
     shadowRadius: 4,
-    elevation: 5
+    elevation: 5,
   },
   modalText: {
     marginBottom: 15,
-    textAlign: "center",
+    textAlign: 'center',
     fontFamily: 'BauhausStd-Demi',
     fontSize: 27,
   },
@@ -196,8 +219,8 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   gridItem: {
-    width: '48%', // Nearly half width to accommodate two items per row
-    marginBottom: 10, // Space between rows
+    width: '48%',
+    marginBottom: 10,
   },
   buttonText: {
     color: '#fff',

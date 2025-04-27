@@ -1,109 +1,111 @@
-
-
-
-
-import React, { useRef, useState, useEffect } from 'react';
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Modal, Pressable, Image } from 'react-native';
+import React, {useRef, useState, useEffect} from 'react';
+import {
+  StyleSheet,
+  Text,
+  View,
+  ScrollView,
+  TouchableOpacity,
+  Modal,
+  Pressable,
+  Image,
+} from 'react-native';
 import Header from '../components/Header';
 
-import firestore from '@react-native-firebase/firestore'; 
+import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
 
-const HPScreen = ({ navigation, route }) => {
-  const { userData } = route.params || { userData: { username: 'Guest' } };
+const HPScreen = ({navigation, route}) => {
+  const {userData} = route.params || {userData: {username: 'Guest'}};
 
   const scrollViewRef = useRef();
   const [modalVisible, setModalVisible] = useState(true);
   const [introModalVisible, setIntroModalVisible] = useState(true);
   const [rewardModalVisible, setRewardModalVisible] = useState(false);
   const [userScores, setUserScores] = useState({});
-  const [greeting, setGreeting] = useState('Hello'); // default greeting
+  const [greeting, setGreeting] = useState('Hello');
 
-
-  
   useEffect(() => {
     const checkUserAndFetchScores = () => {
       const user = auth().currentUser;
       if (!user) return;
-  
+
       const userRef = firestore().collection('users').doc(user.email);
-      // Set up the real-time listener
+
       const unsubscribe = userRef.onSnapshot(doc => {
-        let greetingMessage = 'Hello'; // Default message
+        let greetingMessage = 'Hello';
         if (doc.exists) {
           const userData = doc.data();
-          greetingMessage = 'Welcome back'; // User exists
-          // You might want to do something with userData, like checking level
-  
-          // Fetch user scores dynamically and update state
+          greetingMessage = 'Welcome back';
+
           const newUserScores = {};
           for (let i = 7; i <= 40; i++) {
             const userEmailWithLevel = `${user.email}level${i}`;
-            firestore().collection('scores').doc(userEmailWithLevel).get().then(scoreDoc => {
-              newUserScores[i] = scoreDoc.exists; // Store whether data exists for this level
-              setUserScores(prevScores => ({ ...prevScores, ...newUserScores })); // Update the state progressively
-            });
+            firestore()
+              .collection('scores')
+              .doc(userEmailWithLevel)
+              .get()
+              .then(scoreDoc => {
+                newUserScores[i] = scoreDoc.exists;
+                setUserScores(prevScores => ({
+                  ...prevScores,
+                  ...newUserScores,
+                }));
+              });
           }
         } else {
-          userRef.set({ email: user.email, level: 0 }); // Set new user with level 0
+          userRef.set({email: user.email, level: 0});
         }
-        // Update greeting state
+
         setGreeting(greetingMessage);
       });
-  
-      return () => unsubscribe(); // Clean up the listener
+
+      return () => unsubscribe();
     };
-  
+
     checkUserAndFetchScores();
   }, []);
-
-
 
   useEffect(() => {
     const user = auth().currentUser;
     if (!user) return;
-  
+
     const newUserScores = {};
-    const scoreRefs = []; // To hold references to the unsubscribe functions
-  
-    // Set up listeners for each level
+    const scoreRefs = [];
+
     for (let i = 11; i <= 44; i++) {
       const userEmailWithLevel = `${user.email}level${i}`;
       const scoreRef = firestore().collection('scores').doc(userEmailWithLevel);
-      
+
       const unsubscribe = scoreRef.onSnapshot(scoreDoc => {
-        newUserScores[i] = scoreDoc.exists; // Store whether data exists for this level
-        setUserScores(prevScores => ({ ...prevScores, [i]: scoreDoc.exists })); // Update the state progressively
+        newUserScores[i] = scoreDoc.exists;
+        setUserScores(prevScores => ({...prevScores, [i]: scoreDoc.exists}));
       });
-  
-      scoreRefs.push(unsubscribe); // Store the unsubscribe function for cleanup
+
+      scoreRefs.push(unsubscribe);
     }
-  
-    // Cleanup function to unsubscribe from all score document listeners
+
     return () => scoreRefs.forEach(unsubscribe => unsubscribe());
   }, []);
-  
-  
-  
+
   const handleRewardGo = async () => {
     try {
       const user = auth().currentUser;
       const userUID = user ? user.uid : null;
       if (!userUID) return;
-  
+
       const userRef = firestore().collection('users').doc(userUID);
-      await firestore().runTransaction(async (transaction) => {
+      await firestore().runTransaction(async transaction => {
         const doc = await transaction.get(userRef);
         if (!doc.exists) {
           throw new Error('User document does not exist');
         }
-  
+
         const userData = doc.data();
-        const newScore = (userData.score || 0) + 10; // Increment score by 10
-        transaction.update(userRef, { score: newScore, daily: 0 }); // Update score and reset daily
+        const newScore = (userData.score || 0) + 10;
+        transaction.update(userRef, {score: newScore, daily: 0});
       });
-  
-      setRewardModalVisible(false); // Close the reward modal
+
+      setRewardModalVisible(false);
     } catch (error) {
       console.error('Error updating user score:', error);
     }
@@ -111,78 +113,43 @@ const HPScreen = ({ navigation, route }) => {
 
   const handleIntroClose = async () => {
     setIntroModalVisible(false);
-  
+
     const user = auth().currentUser;
     const userUID = user ? user.uid : null;
     if (!userUID) return;
-  
+
     const userRef = firestore().collection('users').doc(userUID);
     const userDoc = await userRef.get();
-  
+
     if (userDoc.exists) {
       const userData = userDoc.data();
-      const lastChecked = userData.lastChecked ? userData.lastChecked.toDate() : null;
+      const lastChecked = userData.lastChecked
+        ? userData.lastChecked.toDate()
+        : null;
       const today = new Date();
-      const todayStr = today.toISOString().split('T')[0];  // Get current date in YYYY-MM-DD format
-  
-      if (!lastChecked || lastChecked.toISOString().split('T')[0] !== todayStr) {
-        // Update lastChecked and reset daily if the day has changed
+      const todayStr = today.toISOString().split('T')[0];
+
+      if (
+        !lastChecked ||
+        lastChecked.toISOString().split('T')[0] !== todayStr
+      ) {
         await userRef.update({
           daily: 1,
-          lastChecked: firestore.Timestamp.fromDate(new Date())  // Update the last checked date to now
+          lastChecked: firestore.Timestamp.fromDate(new Date()),
         });
         console.log('Daily reset to 1 and lastChecked updated.');
       }
-  
-      // Regardless of date change, decide whether to show reward modal
+
       if (userData.daily === 1) {
-        setRewardModalVisible(true); // Show reward modal if daily is already 1
+        setRewardModalVisible(true);
       }
     } else {
-      // Optionally handle the case where the document doesn't exist
-      console.log("No user document exists");
+      console.log('No user document exists');
     }
   };
-  
-  
 
-  // const handleIntroClose = async () => {
-  //   setIntroModalVisible(false);
-  
-  //   const user = auth().currentUser;
-  //   const userUID = user ? user.uid : null;
-  //   if (!userUID) return;
-  
-  //   const userRef = firestore().collection('users').doc(userUID);
-  //   const userDoc = await userRef.get();
-  
-  //   if (userDoc.exists) {
-  //     const userData = userDoc.data();
-  //     if (userData.daily === 0) {
-      
-  //       setTimeout(() => {
-  //         userRef.update({ daily: 1 }) 
-  //           .then(() => {
-  //             console.log('Daily updated after 10 seconds');
-  //           })
-  //           .catch((error) => {
-  //             console.error('Error updating daily:', error);
-  //           });
-  //       }, 10000); 
-  //     }
-  //     if (userData.daily === 1) {
-  //       setRewardModalVisible(true); 
-  //     }
-  //   } else {
-    
-  //     console.log("No user document exists");
-  //   }
-  // };
-  
-  
-  const handleButtonPress = (level) => {
-    // Handle button press based on level
-    switch(level) {
+  const handleButtonPress = level => {
+    switch (level) {
       case 11:
         navigation.navigate('Section');
         break;
@@ -209,20 +176,20 @@ const HPScreen = ({ navigation, route }) => {
         visible={introModalVisible}
         onRequestClose={() => {
           setIntroModalVisible(!introModalVisible);
-        }}
-      >
+        }}>
         <View style={styles.centeredView}>
           <View style={styles.modalView}>
             <Image
-              source={require("../../assets/anilogo.png")}
-              style={{ width: 38, height: 68 }}
+              source={require('../../assets/anilogo.png')}
+              style={{width: 38, height: 68}}
             />
-            <Text style={styles.greetingText}>{greeting}, {userData.username}!</Text>
-            <Text style={styles.modalText}>Are you ready to start learning a new dialect?</Text>
-            <Pressable
-              style={styles.buttonClose}
-              onPress={handleIntroClose}
-            >
+            <Text style={styles.greetingText}>
+              {greeting}, {userData.username}!
+            </Text>
+            <Text style={styles.modalText}>
+              Are you ready to start learning a new dialect?
+            </Text>
+            <Pressable style={styles.buttonClose} onPress={handleIntroClose}>
               <Text style={styles.textStyle}>Got it!</Text>
             </Pressable>
           </View>
@@ -234,97 +201,92 @@ const HPScreen = ({ navigation, route }) => {
         visible={rewardModalVisible}
         onRequestClose={() => {
           setRewardModalVisible(!rewardModalVisible);
-        }}
-      >
+        }}>
         <View style={styles.centeredView}>
           <View style={styles.modalView}>
             <Image
-              source={require("../../assets/anilogo.png")}
-              style={{ width: 38, height: 68 }}
+              source={require('../../assets/anilogo.png')}
+              style={{width: 38, height: 68}}
             />
-            <Text style={styles.greetingText}>Login everyday to receive rewards!</Text>
+            <Text style={styles.greetingText}>
+              Login everyday to receive rewards!
+            </Text>
             <Image
-                    source={require('../../assets/coin.png')}
-                    style={styles.coinImage}
-                /> 
+              source={require('../../assets/coin.png')}
+              style={styles.coinImage}
+            />
             <Text style={styles.modalText}>10 coins</Text>
             <Pressable
-  style={styles.buttonClose}
-  onPress={() => {
-    handleRewardGo(); // Call handleRewardGo function
-    setRewardModalVisible(false); // Hide the modal
-  }}
->
-  <Text style={styles.textStyle}>Go</Text>
-</Pressable>
+              style={styles.buttonClose}
+              onPress={() => {
+                handleRewardGo();
+                setRewardModalVisible(false);
+              }}>
+              <Text style={styles.textStyle}>Go</Text>
+            </Pressable>
           </View>
         </View>
       </Modal>
-   
+
       <View ref={scrollViewRef} style={styles.contentContainer}>
-       
-       {/* Level 7 Button */}
-       <TouchableOpacity
-          style={[styles.button, { backgroundColor: userScores[11] ? '' : '#7ED957' }]}
-          onPress={() => handleButtonPress(11)}
-        >
+        <TouchableOpacity
+          style={[
+            styles.button,
+            {backgroundColor: userScores[11] ? '' : '#7ED957'},
+          ]}
+          onPress={() => handleButtonPress(11)}>
           <Text style={styles.buttonText}>Basic Greetings</Text>
         </TouchableOpacity>
         <View style={styles.button1}></View>
-       {/* Level 14 Button */}
 
-       <TouchableOpacity
+        <TouchableOpacity
           style={[
             styles.button,
-            { 
-              backgroundColor: userScores[22] 
-                ? '#7ED957' 
-                : userScores[11] 
-                ? '#B17D52' // If level 7 is completed, change to brown
-                : '#BFBBB1' 
-            }
+            {
+              backgroundColor: userScores[22]
+                ? '#7ED957'
+                : userScores[11]
+                ? '#B17D52'
+                : '#BFBBB1',
+            },
           ]}
           onPress={() => handleButtonPress(14)}
-          disabled={userScores[22] || userScores[11] ? false : true}
-        >
+          disabled={userScores[22] || userScores[11] ? false : true}>
           <Text style={styles.buttonText}>Expression</Text>
         </TouchableOpacity>
 
         <View style={styles.button1}></View>
 
-        {/* Level 20 Button */}
         <TouchableOpacity
           style={[
             styles.button,
-            { 
-              backgroundColor: userScores[33] 
+            {
+              backgroundColor: userScores[33]
                 ? '#7ED957'
-                : userScores[22] 
-                ? '#B17D52' // If level 14 is completed, change to brown
-                : '#BFBBB1' 
-            }
+                : userScores[22]
+                ? '#B17D52'
+                : '#BFBBB1',
+            },
           ]}
           onPress={() => handleButtonPress(20)}
-          disabled={userScores[33] || userScores[22] ? false : true}
-        >
+          disabled={userScores[33] || userScores[22] ? false : true}>
           <Text style={styles.buttonText}>Directions</Text>
         </TouchableOpacity>
         <View style={styles.button1}></View>
-        {/* Level 26 Button */}
+
         <TouchableOpacity
           style={[
             styles.button,
-            { 
-              backgroundColor: userScores[44] 
+            {
+              backgroundColor: userScores[44]
                 ? '#7ED957'
-                : userScores[33] 
-                ? '#B17D52' // If level 20 is completed, change to brown
-                : '#BFBBB1' 
-            }
+                : userScores[33]
+                ? '#B17D52'
+                : '#BFBBB1',
+            },
           ]}
           onPress={() => handleButtonPress(26)}
-          disabled={userScores[44] || userScores[33] ? false : true}
-        >
+          disabled={userScores[44] || userScores[33] ? false : true}>
           <Text style={styles.buttonText}>Basic Emotions</Text>
         </TouchableOpacity>
 
@@ -335,7 +297,7 @@ const HPScreen = ({ navigation, route }) => {
 };
 
 const styles = StyleSheet.create({
-   centeredView: {
+  centeredView: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
@@ -344,7 +306,6 @@ const styles = StyleSheet.create({
     color: '#7A4010',
     textAlign: 'center',
     padding: 10,
-    
   },
   modalView: {
     margin: 60,
@@ -377,8 +338,8 @@ const styles = StyleSheet.create({
   },
   buttonClose: {
     backgroundColor: '#DBC9A2',
-    height:40,
-    width:100,
+    height: 40,
+    width: 100,
     borderRadius: 20,
   },
 
@@ -389,7 +350,7 @@ const styles = StyleSheet.create({
   contentContainer: {
     flex: 1,
     justifyContent: 'center',
-    alignItems: 'center', 
+    alignItems: 'center',
   },
   button2: {
     backgroundColor: '#7ED957',
@@ -397,11 +358,11 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     marginTop: 124,
     width: 300,
-    justifyContent: 'center', 
+    justifyContent: 'center',
   },
   lockIcon: {
-    alignSelf: 'center', 
-    marginBottom: 1, 
+    alignSelf: 'center',
+    marginBottom: 1,
   },
   button: {
     backgroundColor: '#BFBBB1',
@@ -409,7 +370,7 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     marginTop: 10,
     width: 300,
-    justifyContent: 'center', 
+    justifyContent: 'center',
   },
   buttonM: {
     backgroundColor: '#BFBBB1',
@@ -425,14 +386,14 @@ const styles = StyleSheet.create({
     width: 4,
     marginTop: 15,
     height: 50,
-    justifyContent: 'center', 
+    justifyContent: 'center',
   },
   buttonText: {
     color: '#fff',
     fontSize: 16,
     textAlign: 'center',
     fontFamily: 'BauhausStd-Demi',
-    fontSize: 27, 
+    fontSize: 27,
   },
 });
 

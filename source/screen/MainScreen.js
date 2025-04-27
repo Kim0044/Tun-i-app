@@ -1,38 +1,40 @@
-import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, TouchableOpacity, Image, Text } from 'react-native';
+import React, {useState, useEffect} from 'react';
+import {StyleSheet, View, TouchableOpacity, Image, Text} from 'react-native';
 import Sound from 'react-native-sound';
 import Video from 'react-native-video';
 import Voice from '@react-native-voice/voice';
 
 import Header from '../components/Header';
 
-const HPScreen = ({ navigation }) => {
+const HPScreen = ({navigation}) => {
   const [sound, setSound] = useState();
-  const [isPlaying, setIsPlaying] = useState(false); // Set to false to start paused
+  const [isPlaying, setIsPlaying] = useState(false);
   const [recognizedText, setRecognizedText] = useState('');
   const [responseText, setResponseText] = useState('');
 
   useEffect(() => {
-    // Pause the video when component mounts
     setIsPlaying(false);
   }, []);
 
   const playSound = () => {
-    const newSound = new Sound(require('../../assets/audio/greeting.mp3'), (error) => {
-      if (error) {
-        console.log('failed to load the sound', error);
-        return;
-      }
-      setSound(newSound);
-      newSound.play(() => {
-        setIsPlaying(false);
-      });
-      setIsPlaying(true);
-      setTimeout(() => {
-        newSound.stop();
-        setIsPlaying(false);
-      }, 1000);
-    });
+    const newSound = new Sound(
+      require('../../assets/audio/greeting.mp3'),
+      error => {
+        if (error) {
+          console.log('failed to load the sound', error);
+          return;
+        }
+        setSound(newSound);
+        newSound.play(() => {
+          setIsPlaying(false);
+        });
+        setIsPlaying(true);
+        setTimeout(() => {
+          newSound.stop();
+          setIsPlaying(false);
+        }, 1000);
+      },
+    );
   };
 
   const startVoiceRecognition = async () => {
@@ -52,7 +54,7 @@ const HPScreen = ({ navigation }) => {
   };
 
   useEffect(() => {
-    Voice.onSpeechResults = (event) => {
+    Voice.onSpeechResults = event => {
       const recognizedText = event.value[0];
       setRecognizedText(recognizedText);
       checkKeyword(recognizedText);
@@ -63,7 +65,7 @@ const HPScreen = ({ navigation }) => {
     };
   }, []);
 
-  const checkKeyword = (text) => {
+  const checkKeyword = text => {
     if (text.toLowerCase().includes('maayong buntag')) {
       setResponseText('Good job ✅');
     } else {
@@ -78,12 +80,12 @@ const HPScreen = ({ navigation }) => {
         <View style={styles.card}>
           <Text style={styles.greetingText}>Basic Greetings</Text>
           <Text style={styles.greetingText1}>Maayong buntag!</Text>
- 
+
           <View style={styles.buttonAndVideoContainer}>
             <TouchableOpacity onPress={playSound}>
               <Image
                 source={require('../../assets/play.png')}
-                style={{ width: 65, height: 60, marginRight: 5 }}
+                style={{width: 65, height: 60, marginRight: 5}}
               />
             </TouchableOpacity>
             <TouchableOpacity onPress={() => setIsPlaying(!isPlaying)}>
@@ -101,13 +103,12 @@ const HPScreen = ({ navigation }) => {
               onPressOut={stopVoiceRecognition}>
               <Image
                 source={require('../../assets/record.png')}
-                style={{ width: 90, height: 90, marginLeft: 110 }}
+                style={{width: 90, height: 90, marginLeft: 110}}
               />
             </TouchableOpacity>
           </View>
-          <Text style={styles.responseText }>{responseText}</Text>
+          <Text style={styles.responseText}>{responseText}</Text>
         </View>
-       
       </View>
     </View>
   );

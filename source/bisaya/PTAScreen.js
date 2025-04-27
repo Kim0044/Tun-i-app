@@ -1,21 +1,31 @@
-
-
-import React, { useState, useRef, useEffect } from 'react';
-import { StyleSheet, View, TouchableOpacity, Text, TouchableWithoutFeedback, Image, Modal, TouchableHighlight, Alert, Animated, Easing } from 'react-native';
+import React, {useState, useRef, useEffect} from 'react';
+import {
+  StyleSheet,
+  View,
+  TouchableOpacity,
+  Text,
+  TouchableWithoutFeedback,
+  Image,
+  Modal,
+  TouchableHighlight,
+  Alert,
+  Animated,
+  Easing,
+} from 'react-native';
 import Header from '../components/Header';
 import firestore from '@react-native-firebase/firestore';
-import auth from '@react-native-firebase/auth'; // Import Firebase authentication
+import auth from '@react-native-firebase/auth';
 
-const PTAScreen = ({ navigation }) => {
+const PTAScreen = ({navigation}) => {
   const [displayText, setDisplayText] = useState('');
   const [showTryAgain, setShowTryAgain] = useState(false);
   const [showCorrect, setShowCorrect] = useState(false);
   const [level, setLevel] = useState(11);
   const [score, setScore] = useState(0);
   const [modalVisible, setModalVisible] = useState(false);
-  const [modalMessage, setModalMessage] = useState("");
+  const [modalMessage, setModalMessage] = useState('');
   const [hintUsed, setHintUsed] = useState(false);
-  const [congratsModalVisible, setCongratsModalVisible] = useState(false); // New modal state
+  const [congratsModalVisible, setCongratsModalVisible] = useState(false);
   const scale = useRef(new Animated.Value(1)).current;
   const backgroundColor = useRef(new Animated.Value(0)).current;
   const [responseText, setResponseText] = useState('');
@@ -23,105 +33,102 @@ const PTAScreen = ({ navigation }) => {
   const [failedAttempts, setFailedAttempts] = useState(0);
   const [modalVisibleE, setModalVisibleE] = useState(false);
 
-
   useEffect(() => {
     if (displayText === 'Taga asa ka?') {
-      // Animate the progress bar
       Animated.timing(progress, {
-        toValue: 100, // Adjusted to match the input range's maximum for clarity
+        toValue: 100,
         duration: 2000,
         easing: Easing.linear,
         useNativeDriver: false,
-      }).start(({ finished }) => {
-        // Check if animation finished, then show the modal
+      }).start(({finished}) => {
         if (finished) {
-        setCongratsModalVisible(true);
-
+          setCongratsModalVisible(true);
         }
       });
     } else {
-      // Reset progress when the condition is not met
       progress.setValue(0);
     }
   }, [displayText]);
-
 
   const navigateToHP = () => {
     navigation.navigate('HP');
   };
 
-//   const navigateToHP = () => {
-//     navigation.navigate('HP');
-//   };
-
   const buttonBackgroundColor = backgroundColor.interpolate({
     inputRange: [0, 1],
-    outputRange: ['#BFBBB1', '#a1d162'] // from original color to green
+    outputRange: ['#BFBBB1', '#a1d162'],
   });
 
-  const handleButtonClick = (text) => {
+  const handleButtonClick = text => {
     if (text === 'Taga asa ka?') {
       setDisplayText('Taga asa ka?');
       setShowTryAgain(false);
       setShowCorrect(true);
-      setFailedAttempts(0); // Reset on correct answer
-      // Increment score regardless of the level check
+      setFailedAttempts(0);
+
       incrementScore();
-  
-      // Get the current user's UID and email
+
       const currentUserUID = auth().currentUser.uid;
       const userEmail = auth().currentUser.email;
       const userEmailWithLevel = `${userEmail}level${level}`;
-  
-      // First, check if this level is already set for the user
-      firestore().collection('users').doc(currentUserUID).get()
+
+      firestore()
+        .collection('users')
+        .doc(currentUserUID)
+        .get()
         .then(doc => {
           if (doc.exists) {
             const userCurrentLevel = doc.data().level;
-            // Only update if the current level is less than the new level
+
             if (!userCurrentLevel || userCurrentLevel < level) {
-              // Update the user's level in Firestore
-              firestore().collection('users').doc(currentUserUID).update({ level: level })
+              firestore()
+                .collection('users')
+                .doc(currentUserUID)
+                .update({level: level})
                 .then(() => {
-                  console.log("Level data updated successfully!");
+                  console.log('Level data updated successfully!');
                 })
-                .catch((error) => {
-                  console.error("Error updating level data: ", error);
+                .catch(error => {
+                  console.error('Error updating level data: ', error);
                 });
-  
-              // Set the score for this level
-              firestore().collection('scores').doc(userEmailWithLevel).set({ score: 1, level: level })
+
+              firestore()
+                .collection('scores')
+                .doc(userEmailWithLevel)
+                .set({score: 1, level: level})
                 .then(() => {
-                  console.log("Score and level data saved successfully!");
+                  console.log('Score and level data saved successfully!');
                 })
-                .catch((error) => {
-                  console.error("Error saving score and level data: ", error);
+                .catch(error => {
+                  console.error('Error saving score and level data: ', error);
                 });
             } else {
-              console.log("Level update skipped as the current level is the same or higher.");
+              console.log(
+                'Level update skipped as the current level is the same or higher.',
+              );
             }
           }
         })
         .catch(error => {
-          console.error("Error fetching user data: ", error);
+          console.error('Error fetching user data: ', error);
         });
     } else {
       setDisplayText(`${text}`);
       setShowTryAgain(true);
-      setShowCorrect(false);  setFailedAttempts(failedAttempts + 1); 
+      setShowCorrect(false);
+      setFailedAttempts(failedAttempts + 1);
     }
   };
   useEffect(() => {
     if (failedAttempts >= 3) {
-      setModalMessage("Failed 3 attempts. Please try again!");
+      setModalMessage('Failed 3 attempts. Please try again!');
       setModalVisibleE(true);
-  
-      // Close the modal after a delay and then navigate
+
       setTimeout(() => {
-        setModalVisibleE(false);  // Close the modal
-        navigation.navigate('HIAM'); // Navigate to "PHY" screen
-        setFailedAttempts(0); // Optionally reset the failed attempts
-      }, 3000); // Delay of 3000 ms (3 seconds)
+        setModalVisibleE(false);
+        navigation.navigate('HIAM');
+        setFailedAttempts(0);
+      }, 3000);
     }
   }, [failedAttempts, navigation]);
 
@@ -131,66 +138,80 @@ const PTAScreen = ({ navigation }) => {
         Animated.timing(scale, {
           toValue: 1.1,
           duration: 300,
-          useNativeDriver: false
+          useNativeDriver: false,
         }),
         Animated.timing(scale, {
           toValue: 1,
           duration: 300,
-          useNativeDriver: false
-        })
+          useNativeDriver: false,
+        }),
       ]),
       Animated.sequence([
         Animated.timing(backgroundColor, {
           toValue: 1,
           duration: 300,
-          useNativeDriver: false
+          useNativeDriver: false,
         }),
         Animated.timing(backgroundColor, {
           toValue: 0,
           duration: 300,
-          useNativeDriver: false
-        })
-      ])
+          useNativeDriver: false,
+        }),
+      ]),
     ]).start();
   };
 
   const incrementScore = async () => {
     try {
       const currentUserUID = auth().currentUser.uid;
-      const userDoc = await firestore().collection('users').doc(currentUserUID).get();
+      const userDoc = await firestore()
+        .collection('users')
+        .doc(currentUserUID)
+        .get();
       const currentScore = userDoc.data().score || 0;
       const newScore = currentScore + 1;
-      await firestore().collection('users').doc(currentUserUID).update({ score: newScore });
+      await firestore()
+        .collection('users')
+        .doc(currentUserUID)
+        .update({score: newScore});
       setScore(newScore);
-      console.log("Score incremented successfully!");
+      console.log('Score incremented successfully!');
     } catch (error) {
-      console.error("Error incrementing score: ", error);
+      console.error('Error incrementing score: ', error);
     }
   };
 
   const handlePress = async () => {
     try {
       if (hintUsed) {
-        setModalMessage("Only 10 points per game can be used to reveal a hint.");
+        setModalMessage(
+          'Only 10 points per game can be used to reveal a hint.',
+        );
         setModalVisible(true);
-        return; // Stop further execution if the hint has already been used
+        return;
       }
 
       const currentUserUID = auth().currentUser.uid;
-      const userDoc = await firestore().collection('users').doc(currentUserUID).get();
+      const userDoc = await firestore()
+        .collection('users')
+        .doc(currentUserUID)
+        .get();
       const currentScore = userDoc.data().score;
 
       if (currentScore >= 10) {
         const newScore = currentScore - 10;
-        await firestore().collection('users').doc(currentUserUID).update({ score: newScore });
+        await firestore()
+          .collection('users')
+          .doc(currentUserUID)
+          .update({score: newScore});
         setScore(newScore);
-        setHintUsed(true); // Set hint as used
+        setHintUsed(true);
         triggerPulseAnimation();
       } else if (currentScore === 0) {
         setModalMessage("You don't have enough points for a hint.");
         setModalVisible(true);
       } else {
-        setModalMessage("Score cannot be less than 10.");
+        setModalMessage('Score cannot be less than 10.');
         setModalVisible(true);
       }
     } catch (error) {
@@ -208,94 +229,95 @@ const PTAScreen = ({ navigation }) => {
         transparent={true}
         visible={modalVisibleE}
         onRequestClose={() => {
-        
           setModalVisibleE(!modalVisibleE);
-        }}
-      >
+        }}>
         <View style={styles.centeredView}>
           <View style={styles.modalView}>
             <Text style={styles.modalText}>{modalMessage}</Text>
           </View>
         </View>
       </Modal>
-      {/* Congratulations Modal */}
+      {}
       <Modal
         animationType="slide"
         transparent={true}
         visible={congratsModalVisible}
         onRequestClose={() => {
           setCongratsModalVisible(false);
-        }}
-      >
+        }}>
         <View style={styles.centeredView}>
           <View style={styles.modalView}>
-          <Text style={styles.modalText1}>Congratulations!</Text>
-            <Text style={styles.modalText}>You've completed all the Games of Basic Greetings</Text>
-        
+            <Text style={styles.modalText1}>Congratulations!</Text>
+            <Text style={styles.modalText}>
+              You've completed all the Games of Basic Greetings
+            </Text>
+
             <TouchableWithoutFeedback onPress={navigateToHP}>
-        <View style={styles.imageContainer1}>
-          <Image
-            source={require('../../assets/h.png')}
-            style={styles.image}
-          />
-        </View>
-      </TouchableWithoutFeedback>
+              <View style={styles.imageContainer1}>
+                <Image
+                  source={require('../../assets/h.png')}
+                  style={styles.image}
+                />
+              </View>
+            </TouchableWithoutFeedback>
 
-      <TouchableWithoutFeedback onPress={navigateToHP}>
-        <View  style={styles.button1}>
-        <Text style={styles.buttonText}>Continue to the next level.</Text>
-        </View>
-      </TouchableWithoutFeedback>
-
-        
+            <TouchableWithoutFeedback onPress={navigateToHP}>
+              <View style={styles.button1}>
+                <Text style={styles.buttonText}>
+                  Continue to the next level.
+                </Text>
+              </View>
+            </TouchableWithoutFeedback>
           </View>
         </View>
       </Modal>
       <View style={styles.contentContainer}>
         <View style={styles.card}>
-        <Animated.View
-    style={[
-      styles.progressBar,
-      {
-        width: progress.interpolate({ inputRange: [0, 100], outputRange: ['0%', '100%'] }),
-        height: 5, // Define the height of the progress bar
-        backgroundColor: '#73DA45', // Adjust color
-        position: 'absolute', // This will keep it at the top of the card
-        top: 1,
-        left: 15,
-      }
-    ]}
-  />
-     <View style={styles.greetingContainer}>
-        
-        <Text style={styles.greetingLabel}>Basic:</Text>
-        <Text style={styles.greetingText}>Greetings</Text>
-      </View>
+          <Animated.View
+            style={[
+              styles.progressBar,
+              {
+                width: progress.interpolate({
+                  inputRange: [0, 100],
+                  outputRange: ['0%', '100%'],
+                }),
+                height: 5,
+                backgroundColor: '#73DA45',
+                position: 'absolute',
+                top: 1,
+                left: 15,
+              },
+            ]}
+          />
+          <View style={styles.greetingContainer}>
+            <Text style={styles.greetingLabel}>Basic:</Text>
+            <Text style={styles.greetingText}>Greetings</Text>
+          </View>
           <Text style={styles.greetingText1}>Where are you from?</Text>
 
-          
           <TouchableOpacity style={styles.buttonContainer}>
-          <Text style={styles.greetingText2}>{displayText}</Text>
+            <Text style={styles.greetingText2}>{displayText}</Text>
           </TouchableOpacity>
 
-          {showTryAgain && (
-            <Text style={styles.tryAgainText}>Try Again</Text>
-          )}
-          {showCorrect && (
-            <Text style={styles.correctText}>Correct</Text>
-          )}
+          {showTryAgain && <Text style={styles.tryAgainText}>Try Again</Text>}
+          {showCorrect && <Text style={styles.correctText}>Correct</Text>}
           <View style={styles.buttonContainer1}>
-          <TouchableOpacity
+            <TouchableOpacity
               style={styles.button}
               onPress={() => handleButtonClick('Kumusta mo?')}>
               <Text style={styles.buttonText}>Kumusta mo?</Text>
             </TouchableOpacity>
 
-            <Animated.View style={[styles.button, {transform: [{scale}], backgroundColor: buttonBackgroundColor}]}>
-    <TouchableOpacity onPress={() => handleButtonClick('Taga asa ka?')}>
-      <Text style={styles.buttonText}>Taga asa ka?</Text>
-    </TouchableOpacity>
-  </Animated.View>
+            <Animated.View
+              style={[
+                styles.button,
+                {transform: [{scale}], backgroundColor: buttonBackgroundColor},
+              ]}>
+              <TouchableOpacity
+                onPress={() => handleButtonClick('Taga asa ka?')}>
+                <Text style={styles.buttonText}>Taga asa ka?</Text>
+              </TouchableOpacity>
+            </Animated.View>
 
             <TouchableOpacity
               style={styles.button}
@@ -303,20 +325,18 @@ const PTAScreen = ({ navigation }) => {
               <Text style={styles.buttonText}>Taga asa mo?</Text>
             </TouchableOpacity>
 
-         
-             <TouchableOpacity
+            <TouchableOpacity
               style={styles.button}
               onPress={() => handleButtonClick('Kumusta')}>
               <Text style={styles.buttonText}>Kumusta</Text>
-             </TouchableOpacity>
-
+            </TouchableOpacity>
           </View>
           <TouchableOpacity onPress={handlePress}>
             <Text style={styles.responseText1}>
               Hint:
               <Image
                 source={require('../../assets/coin1.png')}
-                style={{ width: 20.9, height: 20 }}
+                style={{width: 20.9, height: 20}}
               />
               <Text style={styles.boldText}>10</Text>
             </Text>
@@ -325,10 +345,7 @@ const PTAScreen = ({ navigation }) => {
       </View>
       <TouchableWithoutFeedback onPress={navigateToHP}>
         <View style={styles.imageContainer}>
-          <Image
-            source={require('../../assets/h.png')}
-            style={styles.image}
-          />
+          <Image source={require('../../assets/h.png')} style={styles.image} />
         </View>
       </TouchableWithoutFeedback>
     </View>
@@ -346,9 +363,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   greetingContainer: {
-    flexDirection: 'row', // Arrange Basic: and Greetings horizontally
-    alignItems: 'center', // Align items vertically
-    justifyContent: 'center', // Align items horizontally
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: 41,
   },
   card: {
@@ -383,7 +400,7 @@ const styles = StyleSheet.create({
   boldText: {
     fontFamily: 'BauhausStd-Demi',
     fontSize: 22,
-    fontWeight: '100', // Increase font weight for more boldness
+    fontWeight: '100',
   },
   modalView: {
     margin: 20,
@@ -395,11 +412,11 @@ const styles = StyleSheet.create({
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 2
+      height: 2,
     },
     shadowOpacity: 0.25,
     shadowRadius: 4,
-    elevation: 5
+    elevation: 5,
   },
   modalText: {
     fontSize: 20,
@@ -407,30 +424,30 @@ const styles = StyleSheet.create({
   },
   modalText1: {
     fontSize: 30,
-    padding:7,
+    padding: 7,
     fontFamily: 'BauhausStd-Demi',
-},
+  },
   buttonClose: {
     backgroundColor: '#2196F3',
     borderRadius: 20,
     padding: 10,
     marginTop: 23,
-    elevation: 2
+    elevation: 2,
   },
   progressBar: {
-    height: 5, // Adjust height of the progress bar
-    backgroundColor: '#56cc49', // Change color as needed
+    height: 5,
+    backgroundColor: '#56cc49',
     position: 'absolute',
-    top: 0, // Position at the top
-    left: 0, // Align with the left edge
-    right: 0, // Align with the right edge
-    borderTopLeftRadius: 10, // Adjust border radius for the top corners
-    borderTopRightRadius: 9, // Adjust border radius for the top corners
+    top: 0,
+    left: 0,
+    right: 0,
+    borderTopLeftRadius: 10,
+    borderTopRightRadius: 9,
   },
   textStyle: {
     color: 'white',
     fontWeight: 'bold',
-    textAlign: 'center'
+    textAlign: 'center',
   },
 
   responseText1: {
@@ -442,17 +459,15 @@ const styles = StyleSheet.create({
     fontFamily: 'BauhausStd-Demi',
     fontSize: 33,
     textAlign: 'center',
-  
   },
   greetingText: {
     fontFamily: 'BauhausStd-Demi',
     fontSize: 20,
-    textAlign: 'left', // Align the text to the left
-   
+    textAlign: 'left',
   },
   greetingLabel: {
     fontSize: 20,
-    marginRight: 5, // Add some spacing between Basic: and Greetings
+    marginRight: 5,
   },
   greetingText: {
     fontFamily: 'BauhausStd-Demi',
@@ -496,7 +511,6 @@ const styles = StyleSheet.create({
   image: {
     width: 65,
     height: 64,
-   
   },
   button: {
     backgroundColor: '#BFBBB1',
@@ -511,8 +525,8 @@ const styles = StyleSheet.create({
     marginVertical: 5,
     width: '45%',
     borderRadius: 40,
-  top: -4,
-  left: 63
+    top: -4,
+    left: 63,
   },
   buttonText: {
     color: '#000000',
@@ -533,7 +547,6 @@ const styles = StyleSheet.create({
     marginTop: 9,
     textAlign: 'center',
     color: '#73DA45',
-   
   },
 });
 

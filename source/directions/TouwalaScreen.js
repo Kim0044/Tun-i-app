@@ -1,12 +1,24 @@
-import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, TouchableOpacity, Image, Text, Animated, Easing, BackHandler, TouchableWithoutFeedback, Modal, TouchableHighlight,  } from 'react-native'; // Import Modal component
+import React, {useState, useEffect} from 'react';
+import {
+  StyleSheet,
+  View,
+  TouchableOpacity,
+  Image,
+  Text,
+  Animated,
+  Easing,
+  BackHandler,
+  TouchableWithoutFeedback,
+  Modal,
+  TouchableHighlight,
+} from 'react-native';
 import Voice from '@react-native-voice/voice';
 import Header from '../components/Header';
 import Video from 'react-native-video';
 import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
-import { useNavigation } from '@react-navigation/native';
-import { debounce } from 'lodash';
+import {useNavigation} from '@react-navigation/native';
+import {debounce} from 'lodash';
 
 const TouwalaScreen = () => {
   const navigation = useNavigation();
@@ -18,232 +30,235 @@ const TouwalaScreen = () => {
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
   const [showVideo, setShowVideo] = useState(true);
   const [showButton, setShowButton] = useState(false);
-  const [showModal, setShowModal] = useState(false); // State variable for modal visibility
+  const [showModal, setShowModal] = useState(false);
   const [scaleValue, setScaleValue] = useState(new Animated.Value(1));
-  const [orangeScaleValue, setOrangeScaleValue] = useState(new Animated.Value(1));
+  const [orangeScaleValue, setOrangeScaleValue] = useState(
+    new Animated.Value(1),
+  );
   const [score, setScore] = useState(0);
   const [level, setLevel] = useState(23);
   const [orangeDelay] = useState(500);
   const [progress, setProgress] = useState(new Animated.Value(0));
   const [hintText, setHintText] = useState('');
-    const [recognitionTimeout, setRecognitionTimeout] = useState(null);
-    const [modalVisible, setModalVisible] = useState(false);
-const [modalMessage, setModalMessage] = useState("");
-const [hintUsed, setHintUsed] = useState(false);
-const [failedAttempts, setFailedAttempts] = useState(0);
-const [modalVisibleE, setModalVisibleE] = useState(false);
-
-
-
-
+  const [recognitionTimeout, setRecognitionTimeout] = useState(null);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalMessage, setModalMessage] = useState('');
+  const [hintUsed, setHintUsed] = useState(false);
+  const [failedAttempts, setFailedAttempts] = useState(0);
+  const [modalVisibleE, setModalVisibleE] = useState(false);
 
   const togglePlay = () => {
     setAudioPlaying(!audioPlaying);
   };
 
   const startVoiceRecognition = async () => {
-    // Clear existing listeners and destroy previous instances
     await Voice.destroy().then(Voice.removeAllListeners);
     setIsListening(true);
-    setResponseText(''); 
+    setResponseText('');
 
     try {
-        await Voice.start('en-US');
+      await Voice.start('en-US');
 
-        // Clear any existing timeout to avoid duplicates
-        if (recognitionTimeout) clearTimeout(recognitionTimeout);
+      if (recognitionTimeout) clearTimeout(recognitionTimeout);
 
-        // Set a new timeout to stop listening after 8 seconds
-        const timeout = setTimeout(() => {
-            Voice.stop(); // Stops listening
-            setIsListening(false);
-         
-        }, 8000); // 8000 milliseconds = 8 seconds
-
-        // Store the timeout in state so it can be managed elsewhere
-        setRecognitionTimeout(timeout);
-    } catch (error) {
-        console.error('Failed to start voice recognition:', error);
+      const timeout = setTimeout(() => {
+        Voice.stop();
         setIsListening(false);
-        setResponseText('Error starting voice recognition.'); 
+      }, 8000);
+
+      setRecognitionTimeout(timeout);
+    } catch (error) {
+      console.error('Failed to start voice recognition:', error);
+      setIsListening(false);
+      setResponseText('Error starting voice recognition.');
     }
-};
-
-
-
-useEffect(() => {
-  // When responseText is 'Correct', play the audio
-  if (responseText === 'Great') {
-    setAudioPlaying(true);
-  } else {
-    // Stops playing when the responseText is not 'Correct'
-    setAudioPlaying(false);
-  }
-}, [responseText]);  // This effect depends on the responseText state
-
-
-const handlePress = async () => {
-  try {
-    if (hintUsed) {
-      setModalMessage("Only 10 points per game can be used to reveal a hint.");
-      setModalVisible(true);
-      return; // Stop further execution if the hint has already been used
-    }
-
-    const currentUserUID = auth().currentUser.uid;
-    const userDoc = await firestore().collection('users').doc(currentUserUID).get();
-    const currentScore = userDoc.data().score;
-
-    if (currentScore >= 10) {
-      const newScore = currentScore - 10;
-      await firestore().collection('users').doc(currentUserUID).update({ score: newScore });
-      setScore(newScore);
-      setHintText("Tuo ug wala");
-     
-     
-      setHintUsed(true); // Set hint as used
-    } else if (currentScore === 0) {
-      setModalMessage("You don't have enough points for a hint.");
-      setModalVisible(true);
-    } else {
-      setModalMessage("Score cannot be less than 10.");
-      setModalVisible(true);
-    }
-  } catch (error) {
-    console.error('Error handling button press:', error);
-    setModalMessage(`Error: ${error.message}`);
-    setModalVisible(true);
-  }
-};
-
-
+  };
 
   useEffect(() => {
-    // Handles the interim speech results
-    const handlePartialResults = (event) => {
-        if (event.value && event.value.length > 0) {
-          setRecognizedText(event.value[0]);
-          // Reset the timeout when speech is detected
-          if (recognitionTimeout) clearTimeout(recognitionTimeout);
+    if (responseText === 'Great') {
+      setAudioPlaying(true);
+    } else {
+      setAudioPlaying(false);
+    }
+  }, [responseText]);
+
+  const handlePress = async () => {
+    try {
+      if (hintUsed) {
+        setModalMessage(
+          'Only 10 points per game can be used to reveal a hint.',
+        );
+        setModalVisible(true);
+        return;
+      }
+
+      const currentUserUID = auth().currentUser.uid;
+      const userDoc = await firestore()
+        .collection('users')
+        .doc(currentUserUID)
+        .get();
+      const currentScore = userDoc.data().score;
+
+      if (currentScore >= 10) {
+        const newScore = currentScore - 10;
+        await firestore()
+          .collection('users')
+          .doc(currentUserUID)
+          .update({score: newScore});
+        setScore(newScore);
+        setHintText('Tuo ug wala');
+
+        setHintUsed(true);
+      } else if (currentScore === 0) {
+        setModalMessage("You don't have enough points for a hint.");
+        setModalVisible(true);
+      } else {
+        setModalMessage('Score cannot be less than 10.');
+        setModalVisible(true);
+      }
+    } catch (error) {
+      console.error('Error handling button press:', error);
+      setModalMessage(`Error: ${error.message}`);
+      setModalVisible(true);
+    }
+  };
+
+  useEffect(() => {
+    const handlePartialResults = event => {
+      if (event.value && event.value.length > 0) {
+        setRecognizedText(event.value[0]);
+
+        if (recognitionTimeout) clearTimeout(recognitionTimeout);
+      }
+    };
+
+    const handleFinalResults = event => {
+      if (event.value && event.value.length > 0) {
+        setRecognizedText(event.value[0]);
+        checkKeyword(event.value[0]);
+
+        if (recognitionTimeout) {
+          clearTimeout(recognitionTimeout);
+          setRecognitionTimeout(null);
         }
-      };
-      
-      // Handles the final speech results
-      const handleFinalResults = (event) => {
-        if (event.value && event.value.length > 0) {
-          setRecognizedText(event.value[0]);
-          checkKeyword(event.value[0]);
-          // Stop the timeout as final results have been received
-          if (recognitionTimeout) {
-            clearTimeout(recognitionTimeout);
-            setRecognitionTimeout(null);
-          }
-        }
-        setIsListening(false);
-      };
-  
+      }
+      setIsListening(false);
+    };
+
     Voice.onSpeechPartialResults = handlePartialResults;
     Voice.onSpeechResults = handleFinalResults;
-  
+
     return () => {
       Voice.destroy().then(Voice.removeAllListeners);
     };
   }, []);
-  
+
   useEffect(() => {
     if (showModal && responseText === 'Great') {
-      // Animate the progress bar
       Animated.timing(progress, {
-        toValue: 106,  // Ensure this goes to 100
-        duration: 2000, // Duration can be adjusted as needed
+        toValue: 106,
+        duration: 2000,
         easing: Easing.linear,
         useNativeDriver: false,
-      }).start(({ finished }) => {
-        // Check if animation finished, then navigate
+      }).start(({finished}) => {
         if (finished) {
           navigateToMA();
         }
       });
     } else {
-      // Reset progress when modal is closed or responseText is not 'Great'
       progress.setValue(0);
     }
   }, [showModal, responseText]);
-  
-  
 
   useEffect(() => {
-    const backHandler = BackHandler.addEventListener('hardwareBackPress', () => true);
+    const backHandler = BackHandler.addEventListener(
+      'hardwareBackPress',
+      () => true,
+    );
 
     return () => backHandler.remove();
   }, []);
 
-  const checkAndUpdateLevel = async (level) => {
+  const checkAndUpdateLevel = async level => {
     const userEmail = auth().currentUser.email;
     const userEmailWithLevel = `${userEmail}level${level}`;
-    const doc = await firestore().collection('scores').doc(userEmailWithLevel).get();
+    const doc = await firestore()
+      .collection('scores')
+      .doc(userEmailWithLevel)
+      .get();
     if (doc.exists && doc.data().score === 1) {
       console.log(`Level ${level} is already completed.`);
     } else {
-      await firestore().collection('scores').doc(userEmailWithLevel).set({ score: 1, level: level });
+      await firestore()
+        .collection('scores')
+        .doc(userEmailWithLevel)
+        .set({score: 1, level: level});
       const currentUserUID = auth().currentUser.uid;
-      await firestore().collection('users').doc(currentUserUID).update({ level: level });
+      await firestore()
+        .collection('users')
+        .doc(currentUserUID)
+        .update({level: level});
       console.log(`Level ${level} data updated successfully!`);
     }
   };
-  
 
-  const checkKeyword = async (text) => {
-    const keywords = ['tuo og wala', 'tou o wala', 'tou ugwala', 'tuog wala','tuo o wala'];
+  const checkKeyword = async text => {
+    const keywords = [
+      'tuo og wala',
+      'tou o wala',
+      'tou ugwala',
+      'tuog wala',
+      'tuo o wala',
+    ];
     const textLower = text.toLowerCase();
 
-    // Check if any of the keywords is included in the recognized text
     const matchFound = keywords.some(keyword => textLower.includes(keyword));
 
     if (matchFound) {
-        setResponseText('Great');
-        setShowModal(true);
-        setScore(prevScore => prevScore + 1);
-   
-        const currentUserUID = auth().currentUser.uid;
-        try {
-            const userDoc = await firestore().collection('users').doc(currentUserUID).get();
-            if (userDoc.exists) {
-                let currentScore = userDoc.data().score || 0;
-                currentScore += 1;
-                
-                await firestore().collection('users').doc(currentUserUID).update({
-                    score: currentScore
-                });
+      setResponseText('Great');
+      setShowModal(true);
+      setScore(prevScore => prevScore + 1);
 
-                console.log("Score updated successfully to:", currentScore);
-            }
-        } catch (error) {
-            console.error("Failed to update score:", error);
+      const currentUserUID = auth().currentUser.uid;
+      try {
+        const userDoc = await firestore()
+          .collection('users')
+          .doc(currentUserUID)
+          .get();
+        if (userDoc.exists) {
+          let currentScore = userDoc.data().score || 0;
+          currentScore += 1;
+
+          await firestore().collection('users').doc(currentUserUID).update({
+            score: currentScore,
+          });
+
+          console.log('Score updated successfully to:', currentScore);
         }
+      } catch (error) {
+        console.error('Failed to update score:', error);
+      }
 
-        checkAndUpdateLevel(level);
+      checkAndUpdateLevel(level);
     } else {
-        setResponseText("I'm sorry I didn't catch that, can you try again?");
-        setScore(0);
-   
+      setResponseText("I'm sorry I didn't catch that, can you try again?");
+      setScore(0);
     }
     setIsListening(false);
-};
+  };
 
-useEffect(() => {
-  if (failedAttempts >= 3) {
-    setModalMessage("Failed 3 attempts. Back to the start.");
-    setModalVisibleE(true);
+  useEffect(() => {
+    if (failedAttempts >= 3) {
+      setModalMessage('Failed 3 attempts. Back to the start.');
+      setModalVisibleE(true);
 
-    // Reset attempts and navigate after a timeout
-    setTimeout(() => {
-      setFailedAttempts(0); // Reset the failed attempts
-      setModalVisibleE(false);
-      navigation.navigate('Directions'); // Navigate to "HIA"
-    }, 7000);
-  }
-}, [failedAttempts]);
+      setTimeout(() => {
+        setFailedAttempts(0);
+        setModalVisibleE(false);
+        navigation.navigate('Directions');
+      }, 7000);
+    }
+  }, [failedAttempts]);
 
   const startAnimation = () => {
     Animated.loop(
@@ -296,11 +311,11 @@ useEffect(() => {
     setIsVideoPlaying(false);
     setShowButton(true);
   };
-useEffect(() => {
-  return () => {
-    Voice.destroy().then(Voice.removeAllListeners);
-  };
-}, []);
+  useEffect(() => {
+    return () => {
+      Voice.destroy().then(Voice.removeAllListeners);
+    };
+  }, []);
 
   const onVideoEndIntro = () => {
     setShowVideo(false);
@@ -320,156 +335,153 @@ useEffect(() => {
   const navigateToMA = () => {
     navigation.navigate('UP');
   };
- 
 
   return (
     <View style={styles.container}>
       <Header />
-      
+
       <View style={styles.contentContainer}>
-      
-   
-       {showVideo && (
+        {showVideo && (
           <Video
             source={require('../../assets/video/intro-touwala.mp4')}
             style={styles.video}
             resizeMode="cover"
             onEnd={onVideoEndIntro}
           />
-        )} 
-        {showButton && !isVideoPlaying && ( 
-           <TouchableOpacity onPress={handleButtonPress}>
-           <Image
-             source={require('../../assets/playback.png')}
-             style={{ width: 23, height: 23, marginLeft: -150 }}
-           />
-         </TouchableOpacity>
-        )} 
+        )}
+        {showButton && !isVideoPlaying && (
+          <TouchableOpacity onPress={handleButtonPress}>
+            <Image
+              source={require('../../assets/playback.png')}
+              style={{width: 23, height: 23, marginLeft: -150}}
+            />
+          </TouchableOpacity>
+        )}
 
         <View style={styles.card}>
-        <Animated.View
-    style={[
-      styles.progressBar,
-      {
-        width: progress.interpolate({ inputRange: [0, 100], outputRange: ['0%', '100%'] }),
-        height: 5, // Define the height of the progress bar
-        backgroundColor: '#73DA45', // Adjust color
-        position: 'absolute', // This will keep it at the top of the card
-        top: 1,
-        left: 15,
-      }
-    ]}
-  />
+          <Animated.View
+            style={[
+              styles.progressBar,
+              {
+                width: progress.interpolate({
+                  inputRange: [0, 100],
+                  outputRange: ['0%', '100%'],
+                }),
+                height: 5,
+                backgroundColor: '#73DA45',
+                position: 'absolute',
+                top: 1,
+                left: 15,
+              },
+            ]}
+          />
           <View style={styles.greetingContainer}>
-        
-           
             <Text style={styles.greetingText}>Directions</Text>
           </View>
           <Text style={styles.greetingText1}>Right and Left</Text>
-           
+
           <View style={styles.buttonContainer}>
-          {hintText !== "" && (
-    <Text style={styles.hintTextStyle}>{hintText}</Text>
-  )}
+            {hintText !== '' && (
+              <Text style={styles.hintTextStyle}>{hintText}</Text>
+            )}
           </View>
           <View style={styles.recordButtonContainer}>
-  <TouchableOpacity onPress={startVoiceRecognition}>
-    <Animated.View
-      style={[
-        styles.recordButton,
-        isListening && { transform: [{ scale: scaleValue }] },
-      ]}
-    />
-    <Animated.View
-      style={[
-        styles.orangeCircle,
-        isListening && { transform: [{ scale: orangeScaleValue }] },
-      ]}
-    />
-    <Image
-      source={require('../../assets/record.png')}
-      style={styles.recordImage}
-    />
-     {isListening && <Text style={styles.responseText5}>Listening</Text>}
-  </TouchableOpacity>
-  <Text style={[styles.responseText, responseText.includes("I'm sorry I didn't catch that, can you try again?") ? styles.errorText : null]}>
-    {responseText}
-  </Text>
- 
-  <Modal
-  animationType="slide"
-  transparent={true}
-  visible={modalVisibleE}
-  onRequestClose={() => {
-    setModalVisibleE(!modalVisibleE);
-  }}
->
-  <View style={styles.centeredView}>
-    <View style={styles.modalView}>
-      <Text style={styles.modalText}>{modalMessage}</Text>
-    </View>
-  </View>
-</Modal>
-  <Modal
-    animationType="slide"
-    transparent={true}
-    visible={modalVisible}
-    onRequestClose={() => {
-      
-      setModalVisible(!modalVisible);
-    }}
-  >
-    <View style={styles.centeredView}>
-      <View style={styles.modalView}>
-        <Text style={styles.modalText}>{modalMessage}</Text>
-        <TouchableHighlight
-          style={styles.buttonClose}
-          onPress={() => setModalVisible(!modalVisible)}
-        >
-          <Text style={styles.textStyle}>Close</Text>
-        </TouchableHighlight>
-      </View>
-    </View>
-  </Modal>
-  <Video
-        source={require('../../assets/audio/Great!(Girl).mp3')} // Adjust the path as necessary
-        paused={!audioPlaying}  // Controls playback
-        audioOnly={true}  
-        onError={(e) => console.log('Error with audio:', e)}  // Error handling
-      />
- 
- </View>
+            <TouchableOpacity onPress={startVoiceRecognition}>
+              <Animated.View
+                style={[
+                  styles.recordButton,
+                  isListening && {transform: [{scale: scaleValue}]},
+                ]}
+              />
+              <Animated.View
+                style={[
+                  styles.orangeCircle,
+                  isListening && {transform: [{scale: orangeScaleValue}]},
+                ]}
+              />
+              <Image
+                source={require('../../assets/record.png')}
+                style={styles.recordImage}
+              />
+              {isListening && (
+                <Text style={styles.responseText5}>Listening</Text>
+              )}
+            </TouchableOpacity>
+            <Text
+              style={[
+                styles.responseText,
+                responseText.includes(
+                  "I'm sorry I didn't catch that, can you try again?",
+                )
+                  ? styles.errorText
+                  : null,
+              ]}>
+              {responseText}
+            </Text>
 
+            <Modal
+              animationType="slide"
+              transparent={true}
+              visible={modalVisibleE}
+              onRequestClose={() => {
+                setModalVisibleE(!modalVisibleE);
+              }}>
+              <View style={styles.centeredView}>
+                <View style={styles.modalView}>
+                  <Text style={styles.modalText}>{modalMessage}</Text>
+                </View>
+              </View>
+            </Modal>
+            <Modal
+              animationType="slide"
+              transparent={true}
+              visible={modalVisible}
+              onRequestClose={() => {
+                setModalVisible(!modalVisible);
+              }}>
+              <View style={styles.centeredView}>
+                <View style={styles.modalView}>
+                  <Text style={styles.modalText}>{modalMessage}</Text>
+                  <TouchableHighlight
+                    style={styles.buttonClose}
+                    onPress={() => setModalVisible(!modalVisible)}>
+                    <Text style={styles.textStyle}>Close</Text>
+                  </TouchableHighlight>
+                </View>
+              </View>
+            </Modal>
+            <Video
+              source={require('../../assets/audio/Great!(Girl).mp3')}
+              paused={!audioPlaying}
+              audioOnly={true}
+              onError={e => console.log('Error with audio:', e)}
+            />
+          </View>
 
           <View style={styles.recordButtonContainer1}>
-          <TouchableOpacity onPress={handlePress}>
-            <Text style={styles.responseText1}>
-              Hint:
-              <Image
-                source={require('../../assets/coin1.png')}
-                style={{ width: 20.9, height: 20 }}
-              />
-              <Text style={styles.boldText}>10</Text>
-            </Text>
-          </TouchableOpacity>
+            <TouchableOpacity onPress={handlePress}>
+              <Text style={styles.responseText1}>
+                Hint:
+                <Image
+                  source={require('../../assets/coin1.png')}
+                  style={{width: 20.9, height: 20}}
+                />
+                <Text style={styles.boldText}>10</Text>
+              </Text>
+            </TouchableOpacity>
           </View>
-         
         </View>
       </View>
 
       <TouchableWithoutFeedback onPress={navigateToHP}>
         <View style={styles.imageContainer}>
-          <Image
-            source={require('../../assets/h.png')}
-            style={styles.image}
-          />
+          <Image source={require('../../assets/h.png')} style={styles.image} />
         </View>
       </TouchableWithoutFeedback>
-
     </View>
   );
 };
-// Modal styles
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -481,7 +493,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   card: {
-     backgroundColor: '#ffffff',
+    backgroundColor: '#ffffff',
     padding: 24,
     borderRadius: 30,
     marginTop: 20,
@@ -508,7 +520,7 @@ const styles = StyleSheet.create({
     marginTop: -80,
     width: 300,
     height: 120,
-    borderRadius: 10, 
+    borderRadius: 10,
   },
   modalView: {
     margin: 20,
@@ -520,40 +532,39 @@ const styles = StyleSheet.create({
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 2
+      height: 2,
     },
     shadowOpacity: 0.25,
     shadowRadius: 4,
-    elevation: 5
+    elevation: 5,
   },
   buttonClose: {
     backgroundColor: '#2196F3',
     borderRadius: 20,
     padding: 10,
     top: 24,
-    elevation: 2
+    elevation: 2,
   },
   textStyle: {
     color: 'white',
     fontWeight: 'bold',
-    textAlign: 'center'
+    textAlign: 'center',
   },
   modalText: {
     marginBottom: 15,
-    textAlign: 'center'
+    textAlign: 'center',
   },
   image: {
     width: 65,
     height: 64,
-   
   },
   hintTextStyle: {
     fontSize: 18,
-    color: 'blue', // Choose a suitable color
+    color: 'blue',
     padding: 1,
     textAlign: 'center',
   },
-  
+
   buttonContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -562,7 +573,7 @@ const styles = StyleSheet.create({
   boldText: {
     fontFamily: 'BauhausStd-Demi',
     fontSize: 22,
-    fontWeight: '100', // Increase font weight for more boldness
+    fontWeight: '100',
   },
   greetingText1: {
     fontFamily: 'BauhausStd-Demi',
@@ -571,24 +582,23 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   greetingContainer: {
-    flexDirection: 'row', // Arrange Basic: and Greetings horizontally
-    alignItems: 'center', // Align items vertically
-    justifyContent: 'center', // Align items horizontally
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: 41,
   },
   greetingLabel: {
     fontSize: 20,
-    marginRight: 5, // Add some spacing between Basic: and Greetings
+    marginRight: 5,
   },
   greetingText: {
     fontFamily: 'BauhausStd-Demi',
     fontSize: 20,
-    textAlign: 'left', // Align the text to the left
-   
+    textAlign: 'left',
   },
   responseText1: {
     fontSize: 22,
-   
+
     textAlign: 'center',
   },
   responseText: {
@@ -604,7 +614,6 @@ const styles = StyleSheet.create({
     marginTop: 9,
     textAlign: 'center',
     color: '#73DA45',
-   
   },
   errorText: {
     fontFamily: 'BauhausStd-Demi',
@@ -626,7 +635,7 @@ const styles = StyleSheet.create({
   },
   recordButtonContainer: {
     position: 'relative',
-    marginTop: 123
+    marginTop: 123,
   },
   recordButtonContainer1: {
     position: 'absolute',
@@ -658,7 +667,7 @@ const styles = StyleSheet.create({
     height: 90,
     marginLeft: 110,
   },
-  // Modal styles
+
   modalContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -667,24 +676,24 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     backgroundColor: 'white',
-    padding: 70, // Adjust padding as needed
+    padding: 70,
     borderRadius: 10,
     alignItems: 'center',
-    position: 'relative', // Ensure the progress bar is positioned relative to this container
+    position: 'relative',
   },
   modalText: {
     fontSize: 20,
     fontFamily: 'BauhausStd-Demi',
   },
   progressBar: {
-    height: 5, // Adjust height of the progress bar
-    backgroundColor: '#56cc49', // Change color as needed
+    height: 5,
+    backgroundColor: '#56cc49',
     position: 'absolute',
-    top: 0, // Position at the top
-    left: 0, // Align with the left edge
-    right: 0, // Align with the right edge
-    borderTopLeftRadius: 10, // Adjust border radius for the top corners
-    borderTopRightRadius: 9, // Adjust border radius for the top corners
+    top: 0,
+    left: 0,
+    right: 0,
+    borderTopLeftRadius: 10,
+    borderTopRightRadius: 9,
   },
 });
 

@@ -1,18 +1,19 @@
-// ParentComponent.js
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect} from 'react';
 import Header from './Header';
-import firestore from '@react-native-firebase/firestore'; // Import Firestore
-import auth from '@react-native-firebase/auth'; // Import auth
+import firestore from '@react-native-firebase/firestore';
+import auth from '@react-native-firebase/auth';
 
 const ParentComponent = () => {
   const [levelDataCount, setLevelDataCount] = useState(0);
 
   useEffect(() => {
-    // Fetch user's dialect from Firestore
     const fetchUserDialect = async () => {
       try {
-        const user = auth().currentUser; // Access the auth function
-        const userData = await firestore().collection('users').doc(user.uid).get();
+        const user = auth().currentUser;
+        const userData = await firestore()
+          .collection('users')
+          .doc(user.uid)
+          .get();
         const dialect = userData.data().dialect;
         setUserDialect(dialect);
       } catch (error) {
@@ -20,7 +21,6 @@ const ParentComponent = () => {
       }
     };
 
-    // Fetch level data count from Firestore
     const fetchLevelDataCount = async () => {
       try {
         const user = auth().currentUser;
@@ -28,7 +28,10 @@ const ParentComponent = () => {
         let count = 0;
         for (let i = 1; i <= 26; i++) {
           const userEmailWithLevel = `${userEmail}level${i}`;
-          const doc = await firestore().collection('scores').doc(userEmailWithLevel).get();
+          const doc = await firestore()
+            .collection('scores')
+            .doc(userEmailWithLevel)
+            .get();
           if (doc.exists) {
             count++;
           }
@@ -43,11 +46,10 @@ const ParentComponent = () => {
     fetchLevelDataCount();
   }, []);
 
-
   return (
     <>
       <Header levelDataCount={levelDataCount} />
-      {/* Other components or screens */}
+      {}
     </>
   );
 };
